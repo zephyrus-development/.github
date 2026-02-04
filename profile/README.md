@@ -1,194 +1,852 @@
-# Welcome to Nexus CLI 🔐
-
-> **Decentralized, End-to-End Encrypted File Storage Backed by GitHub**
-
-## [CLICK HERE TO GO STRAIGHT TO THE CODE](https://github.com/NexusCLI/NexusCLI)
-
-Nexus CLI transforms your GitHub repository into a private, encrypted file vault. Store sensitive documents, backups, and confidential files with industry-standard AES-256-GCM encryption—all managed from your command line.
+⚠️ **For detailed technical architecture, cryptographic design, and security analysis, please refer to the [Whitepaper](https://github.com/zephyrus-development/zephyrus-cli/wiki/WHITEPAPER).**
 
 ---
 
-## 🌟 What Makes Nexus Special?
+# Zephyrus CLI
 
-| Feature | Benefit |
-|---------|---------|
-| 🔑 **Per-File Encryption Keys** | Share individual files without exposing your entire vault |
-| 💰 **Zero-Cost Storage** | Leverage GitHub's free tier (1GB+) for encrypted backups |
-| 🛡️ **Client-Side Encryption** | Your files never exist in plaintext on any server |
-| 🔍 **Cryptographically Transparent** | Industry-standard AES-256-GCM & PBKDF2; full source code available |
-| 📱 **Cross-Platform CLI** | Linux, macOS, Windows—same tool everywhere |
-| 🌐 **Stateless & Persistent Modes** | Use without creating sessions, or cache locally for speed |
-| 📚 **Git-Backed Version Control** | Complete audit trail of all operations |
+A secure, encrypted file vault backed by GitHub. Store your sensitive files with confidence using end-to-end encryption and git-based version control.
 
----
+## What is Zephyrus CLI?
 
-## 🚀 Quick Start
+Zephyrus CLI is a command-line tool that transforms your GitHub repository into a private, encrypted file vault. Your files are encrypted locally before being uploaded, ensuring that even if your GitHub repository is compromised, your data remains secure.
 
-### 1. Download
-```bash
-# Visit the releases page and download the latest binary for your OS
-https://github.com/NexusCLI/NexusCLI/releases
-```
+**Key Features:**
+- 🔐 **End-to-End Encryption**: Files are encrypted with AES-256-GCM before leaving your computer
+- 🔑 **Per-File Encryption Keys**: Each file has its own unique encryption key for secure sharing
+- ☁️ **GitHub-Backed Storage**: Uses a private GitHub repository as distributed storage
+- 🗂️ **Hierarchical Organization**: Create folders and organize files with full path support
+- 🔍 **Search Functionality**: Quickly find files by name or path
+- 📝 **Version Control**: Full git history of all vault operations
+- 💻 **Cross-Platform**: Works on Windows, macOS, and Linux
+- 🎯 **Stateless Mode**: Use with `-u` flag to authenticate without persistent sessions
+- 🔄 **Interactive Shell**: REPL mode for multiple commands without re-authentication
+- 📤 **Secure File Sharing**: Share individual files without exposing your entire vault
 
-### 2. Setup Your Vault
-```bash
-./nexus-cli setup <github-username> ~/.ssh/id_ed25519
-# Create your vault password when prompted
-```
+## Prerequisites
 
-### 3. Start Using
-```bash
-# Interactive shell (recommended)
-./nexus-cli
+Before you can use Zephyrus CLI, you'll need:
 
-# Or use commands directly
-./nexus-cli upload ./document.pdf documents/report.pdf
-./nexus-cli download documents/report.pdf ./report.pdf
-./nexus-cli ls documents
-```
+1. **A GitHub Account**
+2. **A Private Key for GitHub**: SSH key for authentication (e.g., `id_ed25519`)
+3. **An Empty GitHub Repository**: Create a repository named `.zephyrus` in your GitHub account
+4. **Zephyrus CLI Binary**: Download from [releases](https://github.com/zephyrus-development/zephyrus-cli/releases)
 
----
+## Installation
 
-## 📖 Documentation
+### Download Binary
 
-- **[README.md](https://github.com/NexusCLI/NexusCLI#readme)** — Complete user guide and command reference
-- **[WHITEPAPER.md](https://github.com/NexusCLI/NexusCLI/wiki/WHITEPAPER.md)** — Technical architecture, cryptography, threat models
-- **[Installation Guide](https://github.com/NexusCLI/NexusCLI#installation)** — Step-by-step setup instructions
-- **[Security Considerations](https://github.com/NexusCLI/NexusCLI#security-considerations)** — Encryption details & best practices
+1. Visit the [Zephyrus CLI Releases Page](https://github.com/zephyrus-development/zephyrus-cli/releases)
+2. Download the latest release for your operating system:
+   - **Windows**: `zep.exe`
+   - **macOS**: Please download and compile from source.
+   - **Linux**: Please download and compile from source, linux release coming soon.
+3. Make the binary executable (macOS/Linux):
+   ```bash
+   chmod +x zep-*
+   ```
+4. Optionally, add to your PATH for system-wide access
 
----
+### Setup Your Vault
 
-## 💡 Use Cases
+Before you can use Zephyrus ClI, you must create a [deploy key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/managing-deploy-keys#deploy-keys) on the `.zephyrus` repository you have created, to do this you must generate a ssh keypair through either the `ssh-keygen` command (most secure) or through a website such as [this one](https://www.wpoven.com/tools/create-ssh-key), then add the public key to the deploy key settings tab of your `.zephyrus` github repository.
 
-### Personal Users
-- 📄 Store financial records, medical documents, tax returns
-- 💾 Cloud backup of sensitive files
-- 🔐 Password manager backups
-- 📸 Private photo archives
-
-### Teams & Organizations
-- 📋 Shared document repository with per-file access control
-- 🔑 Secrets management alternative (CI/CD integration)
-- 📤 Secure inter-organizational file transfer
-- 🤝 Collaborative vaults with granular sharing
-
-### Developers
-- 🛠️ Encrypted configuration files
-- 🔐 API keys and credentials management
-- 📦 Secure artifact storage
-- 🚀 Encrypted deployment pipelines
-
----
-
-## 🔐 Security at a Glance
-
-```
-┌────────────────────────────────────────────┐
-│  Your Plaintext File                       │
-└────────────────────────────────────────────┘
-                    ↓
-         [Generate Random 32-byte Key]
-                    ↓
-┌────────────────────────────────────────────┐
-│  AES-256-GCM Encryption                    │
-│  (Unique key per file)                     │
-└────────────────────────────────────────────┘
-                    ↓
-         [Encrypt Key with Vault Password]
-         [PBKDF2-SHA256 × 100,000]
-                    ↓
-┌────────────────────────────────────────────┐
-│  Encrypted File + Encrypted Key            │
-│  → Pushed to GitHub                        │
-└────────────────────────────────────────────┘
-```
-
-**Result**: Files are unreadable without your vault password, even if your GitHub repository is compromised.
-
----
-
-## 📊 Project Status
-
-| Component | Status |
-|-----------|--------|
-| Core CLI | ✅ Stable |
-| File Operations | ✅ Stable |
-| Encryption | ✅ Production-Ready |
-| Per-File Sharing | ✅ Stable |
-| Windows Binary | ✅ Available |
-| macOS Binary | 🏗️ Compile from source |
-| Linux Binary | 🏗️ Compile from source |
-
----
-
-## 🤝 Contributing
-
-We welcome contributions from the community! Whether you're interested in:
-
-- **Code**: Bug fixes, features, optimizations
-- **Documentation**: Guides, examples, translations
-- **Security**: Vulnerability reports (please email instead of opening issues)
-- **Testing**: Cross-platform testing and edge cases
-
-See [CONTRIBUTING.md](https://github.com/NexusCLI/NexusCLI/blob/main/CONTRIBUTING.md) for details.
-
----
-
-## 🛡️ Security & Privacy
-
-- **Zero-Knowledge Architecture**: Your vault password is never sent to us or any server
-- **Open Source**: Full source code available for security audits
-- **Standard Cryptography**: AES-256-GCM and PBKDF2—no proprietary algorithms
-- **No Phone Home**: No telemetry, analytics, or tracking
-- **Your Infrastructure**: Your files remain on GitHub, controlled by you
-
-### Reporting Security Issues
-
-Please **do not** open public issues for security vulnerabilities. Instead, email: [security@nexuscli.dev](mailto:security@nexuscli.dev)
-
----
-
-## 📦 Tech Stack
-
-- **Language**: Go 1.25.6+
-- **Encryption**: `crypto/aes`, `golang.org/x/crypto`
-- **Git Integration**: `github.com/go-git/go-git/v5`
-- **CLI Framework**: `github.com/spf13/cobra`
-
----
-
-## 📝 License
-
-Nexus CLI is released under the **MIT License**. See [LICENSE](https://github.com/NexusCLI/NexusCLI/blob/main/LICENSE) for details.
-
----
-
-## 💬 Community & Support
-
-- **Discussions**: [GitHub Discussions](https://github.com/NexusCLI/NexusCLI/discussions)
-- **Issues**: [Bug Reports & Feature Requests](https://github.com/NexusCLI/NexusCLI/issues)
-- **Wiki**: [Documentation & Guides](https://github.com/NexusCLI/NexusCLI/wiki)
-
----
-
-## 🌍 Get Involved
-
-⭐ **Star us on GitHub** if you find Nexus CLI useful!
+Then to start using Zephyrus CLI, initialize your vault:
 
 ```bash
-# Download and try Nexus CLI today
-git clone https://github.com/NexusCLI/NexusCLI.git
-cd NexusCLI
-go build -o nexus-cli .
-./nexus-cli --help
+./zep setup <github-username> <path-to-ssh--private-key>
 ```
+
+**Example:**
+```bash
+./zep setup Auchrio ./private_key.txt
+```
+
+When prompted:
+- Enter your GitHub username (if not provided as argument)
+- Provide the path to your SSH private key
+- Create a vault password (you'll use this to encrypt your GitHub SSH key)
+
+**What happens during setup:**
+1. Verifies your `.zephyrus` repository exists on GitHub
+2. Reads your SSH private key from disk
+3. Encrypts the key with your vault password
+4. Pushes the encrypted key to `.config/key` in your vault repository
+
+⚠️ **Important**: Your vault password is never stored. You must remember it becasue nobody can recover it for you.
+
+## Getting Started
+
+### Interactive Mode (REPL)
+
+Start the interactive shell:
+```bash
+./zep
+```
+
+You'll be prompted to enter your username and password. Once authenticated, you can run commands without re-entering credentials:
+
+```
+=== Zephyrus Interactive Shell ===
+Username: myusername
+Password: ••••••••••
+✔ Welcome, myusername. Session Active.
+Type 'help' for commands or 'exit' to quit.
+
+zep> upload ./document.pdf documents/report.pdf
+✔ Upload successful.
+
+zep> ls documents
+NAME          TYPE    STORAGE ID
+----          ----    ----------
+report.pdf    [FILE]  a3f2e1c9d4b6f8e2
+
+zep> exit
+```
+
+### Command Line Mode
+
+Run commands directly without entering the shell:
+
+```bash
+# Upload a file
+./zep upload ./document.pdf documents/report.pdf
+
+# List files
+./zep ls documents
+
+# Download a file
+./zep download documents/report.pdf ./report.pdf
+
+# Exit
+```
+
+### Stateless Mode
+
+If you haven't run `connect`, you can use any command with the `-u` flag to authenticate on-the-fly:
+
+```bash
+./zep upload -u myusername ./document.pdf documents/report.pdf
+```
+
+You'll be prompted for your vault password. This doesn't create a persistent session.
+
+## Command Reference
+
+### `setup` - Initialize Your Vault
+
+Sets up a new Zephyrus vault by encrypting and storing your GitHub SSH key.
+
+**Usage:**
+```bash
+./zep setup [username] [key-path]
+```
+
+**Arguments:**
+- `username` (optional): Your GitHub username
+- `key-path` (optional): Path to your SSH private key (e.g., `~/.ssh/id_ed25519`)
+
+**Interactive Prompts (if arguments not provided):**
+- GitHub Username
+- SSH Key Path
+- Vault Password (to encrypt your key)
+
+**Example:**
+```bash
+./zep setup myusername ~/.ssh/id_ed25519
+# Or interactively:
+./zep setup
+```
+
+**Prerequisites:**
+- Repository named `.zephyrus` must exist on your GitHub account
+- SSH key must exist at the specified path
+- SSH key must have access to GitHub
+
+**Note**: This command must be run once before using other vault operations.
 
 ---
 
-<div align="center">
+### `connect` - Create a Persistent Session
 
-**Made with ❤️ by the Nexus CLI Community**
+Authenticates and caches your vault index locally in `zephyrus.conf`. Subsequent commands won't require re-authentication.
 
-[Releases](https://github.com/NexusCLI/NexusCLI/releases) • [Whitepaper](https://github.com/NexusCLI/NexusCLI/wiki/WHITEPAPER.md) • [Issues](https://github.com/NexusCLI/NexusCLI/issues)
+**Usage:**
+```bash
+./zep connect [username]
+```
 
-</div>
+**Aliases:** `conn`, `login`, `auth`, `signin`, `con`, `cn`
+
+**Arguments:**
+- `username` (optional): Your GitHub username
+
+**Interactive Prompts (if username not provided):**
+- Username
+- Vault Password
+
+**Example:**
+```bash
+./zep connect myusername
+# Password: ••••••••••
+# ✔ Connected.
+
+./zep upload ./file.pdf documents/file.pdf
+# Uses cached session - no password prompt
+```
+
+**When to Use:**
+- You're running multiple commands in sequence
+- You want to avoid entering your password repeatedly
+- You're working on a secure machine where storing `zephyrus.conf` is safe
+
+**Note**: Creates a file called `zephyrus.conf` in the current directory containing your cached index.
+
+---
+
+### `upload` - Upload a File
+
+Encrypts and uploads a file from your local filesystem to the vault.
+
+**Usage:**
+```bash
+./zep upload <local-path> <vault-path>
+```
+
+**Aliases:** `up`, `u`, `add`
+
+**Arguments:**
+- `local-path` (required): Path to the file on your computer
+- `vault-path` (required): Destination path in the vault (e.g., `documents/report.pdf`)
+
+**Features:**
+- Automatically creates intermediate folders if they don't exist
+- Updates existing files (overwrites content while keeping storage ID)
+- Encrypts file with AES-256-GCM before uploading
+- Updates vault index on remote repository
+
+**Examples:**
+```bash
+# Upload a single file
+./zep upload ./document.pdf documents/report.pdf
+
+# Upload to nested folders (creates folders automatically)
+./zep upload ./archive.zip backups/2024/full_backup.zip
+
+# Update an existing file
+./zep upload ./updated_report.pdf documents/report.pdf
+
+# Using stateless mode
+./zep upload -u myusername ./file.pdf documents/file.pdf
+```
+
+**Session Behavior:**
+- If you have a persistent session (`zephyrus.conf`), it updates the local cache
+- If using stateless mode, authentication happens once per command
+- After upload, index is synced to remote repository
+
+**File Size:** No hard limits in the code; practical limits depend on GitHub's API.
+
+---
+
+### `download` - Download a File
+
+Decrypts and downloads a file from the vault to your local filesystem. Supports both vault downloads and shared file downloads.
+
+**Usage:**
+```bash
+./zep download <vault-path> <local-path> [--shared <share-string>]
+```
+
+**Aliases:** `down`, `d`, `get`
+
+**Arguments:**
+- `vault-path` (required): Path to the file in the vault (e.g., `documents/report.pdf`). Use `_` when downloading a shared file.
+- `local-path` (required): Where to save the file on your computer
+
+**Flags:**
+- `--shared` (optional): Download a shared file using the share string. Format: `username:storage_id:decryption_key`
+
+**Features:**
+- Finds file by vault path (not storage ID)
+- Automatically decrypts using per-file encryption key
+- Validates file authenticity via GCM authentication
+- Supports downloading shared files from other users
+- Fails safely if decryption fails
+
+**Examples:**
+```bash
+# Download a file from your vault
+./zep download documents/report.pdf ./report.pdf
+
+# Download from nested folders
+./zep download backups/2024/full_backup.zip ./backup.zip
+
+# Using stateless mode
+./zep download -u myusername documents/report.pdf ./report.pdf
+
+# Download with a different name
+./zep download documents/report.pdf ./my_report.pdf
+
+# Download a shared file
+./zep download _ ./report.pdf --shared "john:a3f2e1c9:abc123def456..."
+```
+
+**Error Handling:**
+- Returns error if file not found in vault
+- Returns error if vault path points to a folder
+- Returns error if decryption fails (likely wrong password or invalid share key)
+- Returns error if local file write fails
+
+---
+
+### `delete` - Delete Files or Folders
+
+Deletes a file or entire folder (with all contents) from the vault.
+
+**Usage:**
+```bash
+./zep delete <vault-path>
+```
+
+**Aliases:** `del`, `rm`, `remove`
+
+**Arguments:**
+- `vault-path` (required): Path to the file or folder to delete
+
+**Features:**
+- Supports single file deletion
+- Supports recursive folder deletion (all nested files)
+- Removes files from remote repository
+- Updates vault index
+- Syncs changes to GitHub
+
+**Examples:**
+```bash
+# Delete a single file
+./zep delete documents/report.pdf
+
+# Delete an entire folder and all contents
+./zep delete documents/archive
+
+# Using stateless mode
+./zep delete -u myusername documents/report.pdf
+```
+
+**Behavior:**
+- File is removed from remote repository
+- Folder deletion removes all nested files recursively
+- Vault index is updated immediately
+- Changes are committed and pushed to GitHub
+
+**Irreversible**: Deleted files are not recoverable unless you have git history to roll back.
+
+---
+
+### `ls` - List Vault Contents
+
+Lists all files and folders in a vault directory with formatted output.
+
+**Usage:**
+```bash
+./zep ls [folder]
+```
+
+**Arguments:**
+- `folder` (optional): Path to list (e.g., `documents`). Defaults to root if not provided.
+
+**Output Format:**
+```
+NAME            TYPE    STORAGE ID
+----            ----    ----------
+document.pdf    [FILE]  a3f2e1c9d4b6f8e2
+archive/        [DIR]   -
+```
+
+**Examples:**
+```bash
+# List root of vault
+./zep ls
+
+# List a specific folder
+./zep ls documents
+
+# List nested folder
+./zep ls documents/archive
+
+# Using stateless mode
+./zep ls -u myusername documents
+```
+
+**Output Details:**
+- **NAME**: File or folder name (folders have "/" suffix)
+- **TYPE**: `[FILE]` or `[DIR]`
+- **STORAGE ID**: Hex-encoded storage ID for files, "-" for folders
+
+**Note**: Storage IDs are randomly generated identifiers; they don't reveal original file names.
+
+---
+
+### `search` - Search the Vault
+
+Searches for files and folders by name or path using case-insensitive substring matching.
+
+**Usage:**
+```bash
+./zep search <query>
+```
+
+**Aliases:** `s`
+
+**Arguments:**
+- `query` (required): Search term (case-insensitive, substring matching)
+
+**Features:**
+- Case-insensitive matching
+- Searches both file names and full paths
+- Displays results in formatted table
+- Searches all folders recursively
+
+**Examples:**
+```bash
+# Search for files with "report" in the name
+./zep search report
+# Output:
+# VAULT PATH              TYPE    STORAGE ID
+# ----------              ----    ----------
+# documents/report.pdf    [FILE]  a3f2e1c9d4b6f8e2
+# archive/2024_report     [DIR]   -
+
+# Search by file type
+./zep search .pdf
+
+# Search by year
+./zep search 2024
+
+# Search by path
+./zep search documents/invoices
+
+# Using stateless mode
+./zep search -u myusername "backup"
+```
+
+**Search Matching:**
+- Matches if query appears anywhere in the file name or full path
+- "report" matches "report.pdf", "2024_report", "reports/quarterly"
+- ".pdf" matches all PDF files
+- "2024" matches any file or folder with "2024" in the path
+
+**Output**: If no matches found, displays "No matches found."
+
+---
+
+### `share` - Generate a Share String for a File
+
+Generates a secure share string that allows others to download a specific file without requiring access to your entire vault.
+
+**Usage:**
+```bash
+./zep share <vault-path>
+```
+
+**Aliases:** `sh`
+
+**Arguments:**
+- `vault-path` (required): Path to the file in the vault (e.g., `documents/report.pdf`)
+
+**What It Does:**
+1. Locates the file in your vault index
+2. Decrypts the file's encryption key using your vault password
+3. Generates a share string: `username:storage_id:decryption_key`
+4. Displays the share string and usage instructions
+
+**Features:**
+- Generates unique per-file share tokens
+- Recipient gets access to only that file, not your entire vault
+- Share token includes the unique encryption key for that file
+- Can be revoked by changing the file (uploading a new version)
+- Works with files from any vault
+
+**Examples:**
+```bash
+# Share a file from your vault
+./zep share documents/report.pdf
+# Output:
+# Share this string to allow others to download the file:
+# john:a3f2e1c9:abc123def456789abc123def456789ab
+#
+# Recipient can download with:
+#   zep download _ output.file --shared "john:a3f2e1c9:abc123def456789abc123def456789ab"
+
+# Using stateless mode
+./zep share -u myusername documents/sensitive_file.pdf
+```
+
+**Security Implications:**
+- **Revocation**: No way to revoke a share without changing the file
+- **Access**: Recipient only gets access to that specific file
+- **Key Exposure**: The encryption key is exposed in the share string; share securely (encrypted email, secure messaging, etc.)
+- **No Audit**: You cannot see who has downloaded the shared file
+
+**Best Practices for Sharing:**
+1. Share the string via secure channels (encrypted email, password manager, Signal, etc.)
+2. Never share via unencrypted channels like plain email or messaging apps
+3. For sensitive files, consider sharing a copy instead of the original
+4. If compromised, delete and re-upload the file to invalidate the share
+
+---
+
+### `disconnect` - Remove Local Session
+
+Clears the local session cache and removes `zephyrus.conf`.
+
+**Usage:**
+```bash
+./zep disconnect
+```
+
+**Aliases:** `disc`, `logout`, `signout`, `logoff`, `exit`, `dc`
+
+**What It Does:**
+- Removes `zephyrus.conf` from the current directory
+- Clears in-memory session cache
+- Returns you to unauthenticated state
+
+**Examples:**
+```bash
+./zep disconnect
+# ✔ Logged out.
+
+# All subsequent commands require authentication
+./zep ls
+# No active session. Enter GitHub Username: ...
+```
+
+**When to Use:**
+- Before leaving a shared machine
+- To switch to a different account
+- To clear cached credentials
+
+**Note**: Doesn't affect files in the vault, only removes local cache.
+
+---
+
+### `purge` - Wipe the Entire Vault
+
+Completely removes all files and history from the remote vault. **This is irreversible.**
+
+**Usage:**
+```bash
+./zep purge
+```
+
+**What It Does:**
+1. Asks for confirmation (type `y` to confirm)
+2. Creates an empty git repository
+3. Force-pushes to GitHub, erasing all history
+4. Clears the local vault index
+5. Returns to unauthenticated state
+
+**Example:**
+```bash
+./zep purge
+# ⚠️  Confirm PURGE? This wipes all remote data and history. (y/N): y
+# ✔ Remote vault has been wiped and local index cleared.
+```
+
+**⚠️ WARNING: This operation is permanent and irreversible.**
+- All files are deleted
+- All git history is erased
+- GitHub repository cannot recover the data
+- Only use if you're absolutely certain
+
+**When to Use:**
+- You want to completely reset your vault
+- You're decommissioning the vault
+- You suspect a security compromise and want a clean slate
+
+---
+
+## Usage Patterns
+
+### Pattern 1: Interactive Shell (Recommended)
+
+Best for multiple operations in one session:
+
+```bash
+./zep
+# Username: myusername
+# Password: ••••••••••
+# ✔ Welcome, myusername. Session Active.
+
+zep> upload ./report.pdf documents/2024/Q1.pdf
+zep> upload ./budget.xlsx documents/2024/budget.xlsx
+zep> ls documents/2024
+zep> search Q1
+zep> download documents/2024/Q1.pdf ./Q1_backup.pdf
+zep> exit
+```
+
+### Pattern 2: Persistent Session
+
+Best for scripting or multiple commands:
+
+```bash
+./zep connect myusername
+# Password: ••••••••••
+# ✔ Connected.
+
+./zep upload ./file1.pdf documents/file1.pdf
+./zep upload ./file2.pdf documents/file2.pdf
+./zep ls documents
+./zep disconnect
+```
+
+### Pattern 3: One-Off Commands with Stateless Mode
+
+Best for single commands without persistent session:
+
+```bash
+./zep upload -u myusername ./file.pdf documents/file.pdf
+# Password: ••••••••••
+# ✔ Upload successful.
+
+./zep download -u myusername documents/file.pdf ./file.pdf
+# Password: ••••••••••
+# ✔ Download successful.
+```
+
+### Pattern 4: Automated Vault Access (CI/CD)
+
+Store credentials securely and run commands programmatically:
+
+```bash
+# In your automation script
+export ZEPHYRUS_USER="myusername"
+export ZEPHYRUS_PASS="vaultpassword"  # Handle securely!
+
+./zep upload -u $ZEPHYRUS_USER backup.zip backups/$(date +%Y-%m-%d).zip
+```
+
+## Security Considerations
+
+### Encryption Architecture
+
+**Vault-Level Encryption:**
+- Your GitHub SSH key is encrypted with your vault password using AES-256-GCM
+- The vault index is encrypted with your vault password using AES-256-GCM
+- Algorithm: AES-256-GCM (authenticated encryption)
+- Key Derivation: PBKDF2 with 100,000 iterations and SHA-256
+- Nonce: 12-byte random nonce per encryption
+
+**Per-File Encryption:**
+- Each file has its own unique 32-byte encryption key
+- File keys are encrypted with your vault password and stored in the index
+- File content is encrypted with the per-file key using AES-256-GCM
+- Separate nonce for each file encryption
+
+**Sharing:**
+- Shared files expose only the per-file key, not your vault password
+- Recipients cannot access other files in your vault
+- Each file can have multiple share links without affecting security of other files
+
+Your files are encrypted **before** leaving your computer. GitHub never sees unencrypted data.
+
+### Authentication
+
+- **SSH Keys**: Uses your GitHub SSH key for repository access
+- **Vault Password**: Encrypts your GitHub SSH key
+- **Password Storage**: Never stored; must be provided each session
+
+### Best Practices
+
+1. **Secure Your SSH Key**:
+   - Don't share your GitHub SSH key
+   - Use SSH key passphrases if your SSH client supports it
+   - Store keys on encrypted drives
+
+2. **Protect Your Vault Password**:
+   - Use a strong, unique password (minimum 12 characters recommended)
+   - Don't share it with others
+   - Don't store it in plain text
+   - Your vault password protects both your SSH key and all file encryption keys
+
+3. **Manage `zephyrus.conf`**:
+   - Don't commit `zephyrus.conf` to git
+   - Delete it after sensitive operations
+   - It's not encrypted; treat it like a session token
+
+4. **Repository Access**:
+   - Keep your `.zephyrus` repository private
+   - Only share SSH access with trusted users
+   - Consider using deploy keys for automated access
+
+5. **File Sharing Security**:
+   - Share file links only via secure channels (encrypted email, secure messaging, password managers)
+   - Never share via plain email or unencrypted messaging
+   - If a share link is compromised, delete and re-upload the file to invalidate it
+   - Document who you've shared files with in case of security incidents
+
+6. **Backup Your SSH Key**:
+   - Store a secure copy of your GitHub SSH key
+   - If lost, you'll need to regenerate it
+   - Update in Zephyrus vault after key rotation
+
+7. **Revoke Access**:
+   - To revoke a shared file link, re-upload the file with new content
+   - This generates a new per-file key, invalidating previous share links
+   - Delete the file to permanently revoke all share links
+
+## Troubleshooting
+
+### "Auth failed: invalid password"
+
+**Cause**: Incorrect vault password
+**Solution**: Double-check your vault password and try again
+
+### "Master key not found"
+
+**Cause**: Vault not initialized or `.config/key` missing from repository
+**Solution**: Run `./zep setup` to initialize the vault
+
+### "Repository '.zephyrus' not found"
+
+**Cause**: `.zephyrus` repository doesn't exist on GitHub
+**Solution**: Create an empty repository named `.zephyrus` on GitHub
+
+### "Failed to clone: repository not found"
+
+**Cause**: SSH key doesn't have access to the repository
+**Solution**: 
+- Verify SSH key is added to GitHub account
+- Test with: `ssh -T git@github.com`
+- Ensure key path in setup is correct
+
+### "Path component not found"
+
+**Cause**: File or folder doesn't exist at that path
+**Solution**: Use `ls` or `search` to find the correct path
+
+### "Is a directory, you can only download individual files"
+
+**Cause**: Trying to download a folder instead of a file
+**Solution**: Use `ls` to find individual files within the folder
+
+### "Decryption failed: check your password"
+
+**Cause**: Vault password is incorrect or file is corrupted
+**Solution**: Verify vault password; if file was uploaded successfully, password should work
+
+### SSH Issues on Windows
+
+**Problem**: SSH key not found on Windows
+**Solution**:
+- Use full path to key: `C:\Users\YourName\.ssh\id_ed25519`
+- Or copy key to a known location and reference it
+- Ensure OpenSSH is installed
+
+### Permission Denied Errors
+
+**Cause**: Insufficient access to GitHub repository
+**Solution**:
+- Verify you own the `.zephyrus` repository
+- Check SSH key permissions: `ls -l ~/.ssh/id_ed25519` (should be 600 or 400)
+- On Windows, ensure OpenSSH has correct permissions
+
+## File Format and Structure
+
+### Vault Structure
+
+Your vault is stored in a GitHub repository with this structure:
+
+```
+.zephyrus/
+├── .config/
+│   ├── key        (encrypted SSH key)
+│   └── index      (encrypted vault index)
+├── <hex_id_1>     (encrypted file)
+├── <hex_id_2>     (encrypted file)
+└── <hex_id_3>     (encrypted file)
+```
+
+### Index Format
+
+The `index` file is encrypted JSON that maps paths to storage IDs:
+
+```json
+{
+  "documents": {
+    "type": "folder",
+    "contents": {
+      "report.pdf": {
+        "type": "file",
+        "realName": "a3f2e1c9d4b6f8e2"
+      }
+    }
+  }
+}
+```
+
+### Encryption Format
+
+Encrypted files follow this format:
+
+```
+[16-byte salt][12-byte nonce][encrypted data + auth tag]
+```
+
+This allows each encryption to use a unique salt and nonce, preventing patterns.
+
+## Advanced Usage
+
+### Switching GitHub Accounts
+
+To use a different GitHub account:
+
+```bash
+./zep disconnect
+./zep connect different_username
+# Password: ••••••••••
+```
+
+This creates a new session for the different account. Note: You need a separate `.zephyrus` repository for each account.
+
+### Migrating Vaults
+
+To move your vault to a new GitHub account you can [transfer ownership of the repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/transferring-a-repository) or you can migrate manually by:
+
+1. Create new `.zephyrus` repository on new account
+2. `./zep setup new_username path/to/key`
+3. Download all files from old vault
+4. Upload them to new vault
+5. Delete old `.zephyrus` repository
+
+Files in the vault are never visible to GitHub or other services.
+
+## Getting Help
+
+- **GitHub Issues**: Report bugs at [zephyrus-development/zephyrus-cli/issues](https://github.com/zephyrus-development/zephyrus-cli/issues)
+- **Documentation**: See the [docs folder](./docs/) for detailed module documentation
+- **Security Issues**: Email instead of opening public issues
+
+## Contributing
+
+Contributions are welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch
+3. Submit a pull request
+
+## License
+
+Zephyrus CLI is released under the MIT License. See LICENSE file for details.
+
+## Disclaimer
+
+Zephyrus CLI is provided as-is. While we've implemented industry-standard encryption, we recommend:
+
+- Testing with non-critical files first
+- Maintaining separate backups of important data
+- Keeping your vault password secure
+- Regularly updating to the latest version
+
+Data loss or security issues may occur. Use at your own risk.
